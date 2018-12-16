@@ -3,8 +3,12 @@ from rest_framework.urlpatterns import format_suffix_patterns
 from order import views
 
 urlpatterns = [
-    path('orders/', views.OrderList.as_view(), name='get_all_order'),
-    path('orders/<int:pk>/', views.OrderDetail.as_view()),
+    path('orders/', views.OrderList.as_view(), name='orders-all'),
+    path(
+        'orders/<int:pk>/',
+        views.OrderDetail.as_view(),
+        name='order-delete-update-show'
+    ),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

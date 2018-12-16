@@ -1,12 +1,13 @@
-from rest_framework import serializers
+from rest_framework import serializers, permissions
 
 from order.models import Order
 
 
 class OrderSerializer(serializers.ModelSerializer):
-    email = serializers.ReadOnlyField(source='user_id.email')
-    name = serializers.ReadOnlyField(source='user_id.first_name')
+    name = serializers.ReadOnlyField(source='user.username')
+    email = serializers.ReadOnlyField(source='user.email')
+    permission_classes = (permissions.IsAuthenticated,)
 
     class Meta:
         model = Order
-        fields = ('size', 'user_id', 'name', 'email')
+        fields = ('size', 'name', 'email')
