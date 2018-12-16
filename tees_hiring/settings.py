@@ -130,6 +130,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
     ],
+    'EXCEPTION_HANDLER': 'tees_hiring.utils.custom_exception_handler'
 }
 
 # JWT settings
