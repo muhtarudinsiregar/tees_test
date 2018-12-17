@@ -108,6 +108,16 @@ class GetDetailOrderTest(BaseViewTest):
         self.assertEqual(response.data, serialized.data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+    def test_invalid_get_detail_order(self):
+        expected = Order.objects.get(pk=1)
+        serialized = OrderSerializer(expected)
+
+        self.login_user(self.user.username, 'superadmin')
+        response = self.get_order_detail(100)
+
+        self.assertEqual(response.data['detail'], 'Not found.')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
 
 class DeleteOrderTest(BaseViewTest):
     def test_delete_order(self):
@@ -136,7 +146,7 @@ class UpdateOrderTest(BaseViewTest):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
-class UpdateOrderTest(BaseViewTest):
+class CreateOrderTest(BaseViewTest):
     def test_create_order(self):
         self.login_user(self.user.username, 'superadmin')
         response = self.client.post(reverse(
@@ -156,3 +166,14 @@ class AuthLoginTest(BaseViewTest):
         response = self.login("admin", "superadmin")
         self.assertIn("token", response.data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_invalid_login_user(self):
+        # test with invalid username
+        response = self.login('admin_valid', 'superadmin')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('non_field_errors', response.data)
+
+        response = self.login('', '')
+        self.assertIn('username', response.data)
+        self.assertIn('password', response.data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
