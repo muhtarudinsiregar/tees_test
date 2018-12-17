@@ -8,9 +8,13 @@
 
 
 ## ENDPOINTS
+Api prefix: `api/v1/`
+
+example `localhost:8000/api/v1/api-token-auth`
+
 * Login
 ```
-GET /teams/:team_id/members
+POST /api-token-auth/
 ```
 
  * Get lists
