@@ -25,6 +25,49 @@ class BaseViewTest(APITestCase):
             content_type="application/json"
         )
 
+    def login_user(self, username="", password=""):
+        response = self.login(username, password)
+
+        self.token = response.data['token']
+        # set the token in the header
+        self.client.credentials(
+            HTTP_AUTHORIZATION='Bearer ' + self.token
+        )
+        self.client.login(username=username, password=password)
+        return self.token
+
+    def get_order_list(self):
+        return self.client.get(
+            reverse(
+                "order-list-create",
+                kwargs={
+                    "version": "v1"
+                }
+            )
+        )
+
+    def get_order_detail(self, pk=0):
+        return self.client.get(self.order_url(pk))
+
+    def delete_order(self, pk=0):
+        return self.client.delete(self.order_url(pk))
+
+    def update_order_detail(self, pk=0):
+        return self.client.put(self.order_url(pk))
+
+    def order_url(self, pk=0):
+        url = reverse(
+            "order-delete-update-show",
+            kwargs={
+                "version": "v1",
+                "pk": pk
+            }
+        )
+        return url
+
+    def create_order(self, size='M', user=""):
+        Order.objects.create(size=size, user=user)
+
     def setUp(self):
         self.user = User.objects.create_superuser(
             username="admin",
@@ -34,23 +77,21 @@ class BaseViewTest(APITestCase):
             last_name="user",
         )
 
+        self.create_order('XL', self.user)
+        # self.create_order('M', self.user)
+
+        self.new_order = {'size': 'XXL'}
+
 
 class GetAllOrdersTest(BaseViewTest):
-    def setUp(self):
-        self.valid_payload = {
-            'name': 'Muffin',
-            'age': 4,
-            'breed': 'Pamerion',
-            'color': 'White'
-        }
-
     def test_get_all_orders(self):
         # fetch the data from db
         expected = Order.objects.all()
         serialized = OrderSerializer(expected, many=True)
 
         # hit api
-        response = client.get(reverse('orders-all', kwargs={"version": "v1"}))
+        self.login_user(self.user.username, 'superadmin')
+        response = self.get_order_list()
 
         self.assertEqual(response.data, serialized.data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -59,36 +100,56 @@ class GetAllOrdersTest(BaseViewTest):
 class GetDetailOrderTest(BaseViewTest):
     def test_get_detail_order(self):
         expected = Order.objects.get(pk=1)
-        serialized = OrderSerializer(expected, many=True)
+        serialized = OrderSerializer(expected)
 
-        response = client.get(reverse('get_detail_order'))
+        self.login_user(self.user.username, 'superadmin')
+        response = self.get_order_detail(1)
 
         self.assertEqual(response.data, serialized.data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
-# class DeleteOrderTest(TestCase):
-#     def test_delete_order(self):
-#         response = client.delete(reverse('get_detail_order'))
+class DeleteOrderTest(BaseViewTest):
+    def test_delete_order(self):
+        self.login_user(self.user.username, 'superadmin')
+        response = self.delete_order(pk=1)
 
-#         # self.assertEqual(response.data, serialized.data)
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-
-# class CreateOrderTest(TestCase):
-#     def test_create_order(self):
-#         response = client.post(reverse('get_detail_order'))
-
-#         # self.assertEqual(response.data, serialized.data)
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(Order.objects.count(), 0)
 
 
-# class UpdateOrderTest(TestCase):
-#     def test_create_order(self):
-#         response = client.put(reverse('get_detail_order'))
+class UpdateOrderTest(BaseViewTest):
+    def test_update_order(self):
+        self.login_user(self.user.username, 'superadmin')
+        response = self.client.put(reverse(
+            "order-delete-update-show",
+            kwargs={
+                "version": 'v1',
+                "pk": 1
+            }
+        ),
+            data=json.dumps(self.new_order),
+            content_type='application/json'
+        )
 
-#         # self.assertEqual(response.data, serialized.data)
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['size'], self.new_order['size'])
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+class UpdateOrderTest(BaseViewTest):
+    def test_create_order(self):
+        self.login_user(self.user.username, 'superadmin')
+        response = self.client.post(reverse(
+            "order-list-create",
+            kwargs={"version": 'v1', }
+        ),
+            data=json.dumps(self.new_order),
+            content_type='application/json'
+        )
+
+        self.assertEqual(response.data['size'], self.new_order['size'])
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
 
 class AuthLoginTest(BaseViewTest):
     def test_valid_login_user(self):
