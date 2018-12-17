@@ -9,40 +9,40 @@
 
 ## ENDPOINTS
 * Login
-    ```
-        GET /teams/:team_id/members
-    ```
+```
+GET /teams/:team_id/members
+```
 
  * Get lists
-    ```
-        GET /orders/
-    ```
+```
+GET /orders/
+```
 
  * Store
-    ```
-        POST /orders/
+```
+POST /orders/
 
-        payload: size
-        type: string
-    ```
+payload: size
+type: string
+```
 
  * Show detail
-    ```
-        GET /orders/:id/
-    ```
+```
+GET /orders/:id/
+```
 
  * Update
-    ```
-        PUT /orders/:id/
+```
+PUT /orders/:id/
 
-        payload: size
-        type: string
-    ```
+payload: size
+type: string
+```
 
  * Delete
-    ```
-        DELETE /orders/:id/
-    ```
+```
+DELETE /orders/:id/
+```
 
 ## Run Tests
  * `./manage.py test`
